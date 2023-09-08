@@ -101,10 +101,11 @@ chmod a+x kdenlive-23.04.3-x86_64.AppImage
 
 # importing DeepLabCut with GPU compatibility with Anaconda
 conda env create -f DLC-GPU.yaml
-conda env list
 conda activate DLC-GPU
 pip install 'deeplabcut[gui,tf,modelzoo]'
-python import deeplabcut
+ipython
+import deeplabcut 
+deeplabcut.launch_dlc() # should open up the GUI to work on projects directly rather than using code in Python
 
 # once deeplabcut 2D training is complete, then deactivate deeplabcut environment to start an anipose environment ??
 
