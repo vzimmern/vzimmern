@@ -60,14 +60,14 @@ TE_accel = []
 
 # Using DataFrame.index to calculate accelerations
 for idx in df.index+1:
-    H_accel.append(abs(np.diff(df["H_vel"])[idx]/dt))
-    RA_accel.append(abs(np.diff(df["RA_vel"])[idx]/dt))
-    RL_accel.append(abs(np.diff(df["RL_vel"])[idx]/dt))
-    LA_accel.append(abs(np.diff(df["LA_vel"])[idx]/dt))
-    LL_accel.append(abs(np.diff(df["LL_vel"])[idx]/dt))
-    B_accel.append(abs(np.diff(df["B_vel"])[idx]/dt))
-    TB_accel.append(abs(np.diff(df["TB_vel"])[idx]/dt))
-    TE_accel.append(abs(np.diff(df["TE_vel"])[idx]/dt))
+    H_accel.append(np.diff(df["H_vel"])[idx]/dt)
+    RA_accel.append(np.diff(df["RA_vel"])[idx]/dt)
+    RL_accel.append(np.diff(df["RL_vel"])[idx]/dt)
+    LA_accel.append(np.diff(df["LA_vel"])[idx]/dt)
+    LL_accel.append(np.diff(df["LL_vel"])[idx]/dt)
+    B_accel.append(np.diff(df["B_vel"])[idx]/dt)
+    TB_accel.append(np.diff(df["TB_vel"])[idx]/dt)
+    TE_accel.append(np.diff(df["TE_vel"])[idx]/dt)
     
 df.insert(5, "H_accel", H_accel, True)
 df.insert(10, "RA_accel", RA_accel, True)
