@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 
 # Read the CSV file
 path_to_csv = "~/Documents/CSTB-mouse-trial-Vincent Zimmern-2023-08-16/videos/CSTB-mouse-below-2DLC_resnet50_CSTB-mouse-trialAug16shuffle1_500000.csv"
-position_data = pd.read_csv(path_to_csv)
+
+df = pd.read_csv(path_to_csv)
 
 dt = 0.033
 H_vel = []
@@ -16,19 +17,20 @@ B_vel = []
 TB_vel = []
 TE_vel = []
 
-position_data.columns = ["time","head-x", "head-y", "head-prob","RA-x","RA-y","RA-prob","LA-x","LA-y","LA-prob","RL-x","RL-y","RL-prob","LL-x","LL-y","LL-prob","body-x","body-y","body-prob","TB-x","TB-y","TB-prob", "TE-x","TE-y", "TE-prob"]
-position_data = position_data.drop([0,1], axis=0)
-position_data = position_data.reset_index(drop=True)
+df.columns = ["time","H_x", "H_y", "H_prob","RA_x","RA_y","RA_prob","LA_x","LA_y","LA_prob","RL_x","RL_y","RL_prob","LL_x","LL_y","LL_prob","B_x","B_y","B_prob","TB_x","TB_y","TB_prob","TE_x","TE_y","TE_prob"]
+df = df.drop([0,1], axis=0)
+df = df.reset_index(drop=True)
+df = df.astype(float)
 
 for idx in position_data.index-1:
-    H_vel.append(np.sqrt(np.diff(position_data["H_x"])[idx]**2 + np.diff(position_data["H_y"])[idx]**2)/dt)
-    RA_vel.append(np.sqrt(np.diff(position_data["RA_x"])[idx]**2 + np.diff(position_data["RA_y"])[idx]**2)/dt)
-    LA_vel.append(np.sqrt(np.diff(position_data["LA_x"])[idx]**2 + np.diff(position_data["LA_y"])[idx]**2)/dt)
-    RL_vel.append(np.sqrt(np.diff(position_data["RL_x"])[idx]**2 + np.diff(position_data["RL_y"])[idx]**2)/dt)
-    LL_vel.append(np.sqrt(np.diff(position_data["LL_x"])[idx]**2 + np.diff(position_data["LL_y"])[idx]**2)/dt)
-    B_vel.append(np.sqrt(np.diff(position_data["B_x"])[idx]**2 + np.diff(position_data["B_y"])[idx]**2)/dt)
-    TB_vel.append(np.sqrt(np.diff(position_data["TB_x"])[idx]**2 + np.diff(position_data["TB_y"])[idx]**2)/dt)
-    TE_vel.append(np.sqrt(np.diff(position_data["TE_x"])[idx]**2 + np.diff(position_data["TE_y"])[idx]**2)/dt)
+    H_vel.append(np.sqrt(np.diff(df["H_x"])[idx]**2 + np.diff(df["H_y"])[idx]**2)/dt)
+    RA_vel.append(np.sqrt(np.diff(df["RA_x"])[idx]**2 + np.diff(df["RA_y"])[idx]**2)/dt)
+    LA_vel.append(np.sqrt(np.diff(df["LA_x"])[idx]**2 + np.diff(df["LA_y"])[idx]**2)/dt)
+    RL_vel.append(np.sqrt(np.diff(df["RL_x"])[idx]**2 + np.diff(df["RL_y"])[idx]**2)/dt)
+    LL_vel.append(np.sqrt(np.diff(df["LL_x"])[idx]**2 + np.diff(df["LL_y"])[idx]**2)/dt)
+    B_vel.append(np.sqrt(np.diff(df["B_x"])[idx]**2 + np.diff(df["B_y"])[idx]**2)/dt)
+    TB_vel.append(np.sqrt(np.diff(df["TB_x"])[idx]**2 + np.diff(df["TB_y"])[idx]**2)/dt)
+    TE_vel.append(np.sqrt(np.diff(df["TE_x"])[idx]**2 + np.diff(df["TE_y"])[idx]**2)/dt)
 
 df.insert(4, "H_vel", H_vel, True)
 df.insert(8, "RA_vel", RA_vel, True)
@@ -59,7 +61,7 @@ TB_accel = []
 TE_accel = []
 
 # Using DataFrame.index to calculate accelerations
-for idx in df.index+1:
+for idx in df.index-1:
     H_accel.append(np.diff(df["H_vel"])[idx]/dt)
     RA_accel.append(np.diff(df["RA_vel"])[idx]/dt)
     RL_accel.append(np.diff(df["RL_vel"])[idx]/dt)
