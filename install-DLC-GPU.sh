@@ -3,6 +3,9 @@
 # set path to DLC-GPU.yaml file
 $DLC-GPU-PATH = ~/Documents/glove-test-case/DLC-GPU.yaml
 
+# to avoid "child spawn error" when using DLC-GPU, you may consider this line
+export PATH="${PATH}:/usr/local/nvidia/bin:/usr/local/cuda/bin"
+
 # Some basic software that have to be installed for CUDA/NVIDIA GPU
 
 sudo apt install gcc # this is for NVIDIA
@@ -90,14 +93,7 @@ python3 -c "import tensorflow as tf; print(tf.reduce_sum(tf.random.normal([1000,
 python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 
 # in previous versions of this script, this command allowed the conda activate command later on to function. I'm not sure it's still needed so it's commented out. 
-
 #source ~/anaconda3/etc/profile.d/conda.sh 
-
-#installing KDenlive for video editing so that videos are synchronized
-# make sure to download the AppImage from the kdenlive website
-sudo apt-get install fuse #needed for use of the appimage
-chmod a+x kdenlive-23.04.3-x86_64.AppImage 
-./kdenlive-23.04.03-x86_64.AppImage
 
 # importing DeepLabCut with GPU compatibility with Anaconda
 conda env create -f DLC-GPU.yaml
