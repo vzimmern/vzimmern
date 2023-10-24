@@ -1,0 +1,10 @@
+git clone https://github.com/jakeshirey/DeepLabCut-Display.git
+
+# cd into the directory
+sudo apt-get install python3.10
+virtualenv -p /usr/bin/python3.10 myenv
+source myenv/bin/activate
+pip install -r requirements.txt 
+
+#unfortunately there seem to be errors with dependencies, such that the script does not work currently
+python maingui.py
