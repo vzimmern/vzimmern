@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
+from matplotlib.animation import FuncAnimation
+from IPython import display
 
 # Read the CSV file
 path_to_csv = "~/Documents/CSTB-mouse-trial-Vincent Zimmern-2023-08-16/videos/CSTB-mouse-below-2DLC_resnet50_CSTB-mouse-trialAug16shuffle1_500000.csv"
@@ -159,109 +162,192 @@ df["TE_jerk"][0] = 0
 df["TE_jerk"][1] = 0
 df["TE_jerk"][2] = 0
 
-fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(df["time"], df["H_vel"])
-axs[0, 0].set_title("Head velocity")
-axs[1, 0].plot(df["time"], df["H_accel"], 'tab:orange')
-axs[1, 0].set_title("Head acceleration")
-axs[1, 0].sharex(axs[0, 0])
-axs[0, 1].plot(df["time"], df["H_jerk"], 'tab:green')
-axs[0, 1].set_title("Head jerk")
-axs[1, 1].plot(df["time"], df["H_prob"], 'tab:red')
-axs[1, 1].set_title("Head position probability")
-fig.tight_layout()
+# fig, axs = plt.subplots(2, 2)
+# axs[0, 0].plot(df["time"], df["H_vel"])
+# axs[0, 0].set_title("Head velocity")
+# axs[1, 0].plot(df["time"], df["H_accel"], 'tab:orange')
+# axs[1, 0].set_title("Head acceleration")
+# axs[1, 0].sharex(axs[0, 0])
+# axs[0, 1].plot(df["time"], df["H_jerk"], 'tab:green')
+# axs[0, 1].set_title("Head jerk")
+# axs[1, 1].plot(df["time"], df["H_prob"], 'tab:red')
+# axs[1, 1].set_title("Head position probability")
+# fig.tight_layout()
 
-fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(df["time"], df["RA_vel"])
-axs[0, 0].set_title("Right arm velocity")
-axs[1, 0].plot(df["time"], df["RA_accel"], 'tab:orange')
-axs[1, 0].set_title("Right arm acceleration")
-axs[1, 0].sharex(axs[0, 0])
-axs[0, 1].plot(df["time"], df["RA_jerk"], 'tab:green')
-axs[0, 1].set_title("Right arm jerk")
-axs[1, 1].plot(df["time"], df["RA_prob"], 'tab:red')
-axs[1, 1].set_title("Right arm position probability")
-fig.tight_layout()
+# fig, axs = plt.subplots(2, 2)
+# axs[0, 0].plot(df["time"], df["RA_vel"])
+# axs[0, 0].set_title("Right arm velocity")
+# axs[1, 0].plot(df["time"], df["RA_accel"], 'tab:orange')
+# axs[1, 0].set_title("Right arm acceleration")
+# axs[1, 0].sharex(axs[0, 0])
+# axs[0, 1].plot(df["time"], df["RA_jerk"], 'tab:green')
+# axs[0, 1].set_title("Right arm jerk")
+# axs[1, 1].plot(df["time"], df["RA_prob"], 'tab:red')
+# axs[1, 1].set_title("Right arm position probability")
+# fig.tight_layout()
 
-fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(df["time"], df["LA_vel"])
-axs[0, 0].set_title("Left arm velocity")
-axs[1, 0].plot(df["time"], df["LA_accel"], 'tab:orange')
-axs[1, 0].set_title("Left arm acceleration")
-axs[1, 0].sharex(axs[0, 0])
-axs[0, 1].plot(df["time"], df["LA_jerk"], 'tab:green')
-axs[0, 1].set_title("Left arm jerk")
-axs[1, 1].plot(df["time"], df["LA_prob"], 'tab:red')
-axs[1, 1].set_title("Left arm position probability")
-fig.tight_layout()
+# fig, axs = plt.subplots(2, 2)
+# axs[0, 0].plot(df["time"], df["LA_vel"])
+# axs[0, 0].set_title("Left arm velocity")
+# axs[1, 0].plot(df["time"], df["LA_accel"], 'tab:orange')
+# axs[1, 0].set_title("Left arm acceleration")
+# axs[1, 0].sharex(axs[0, 0])
+# axs[0, 1].plot(df["time"], df["LA_jerk"], 'tab:green')
+# axs[0, 1].set_title("Left arm jerk")
+# axs[1, 1].plot(df["time"], df["LA_prob"], 'tab:red')
+# axs[1, 1].set_title("Left arm position probability")
+# fig.tight_layout()
 
-fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(df["time"], df["RL_vel"])
-axs[0, 0].set_title("Right leg velocity")
-axs[1, 0].plot(df["time"], df["RL_accel"], 'tab:orange')
-axs[1, 0].set_title("Right leg acceleration")
-axs[1, 0].sharex(axs[0, 0])
-axs[0, 1].plot(df["time"], df["RL_jerk"], 'tab:green')
-axs[0, 1].set_title("Right leg jerk")
-axs[1, 1].plot(df["time"], df["RL_prob"], 'tab:red')
-axs[1, 1].set_title("Right leg position probability")
-fig.tight_layout()
+# fig, axs = plt.subplots(2, 2)
+# axs[0, 0].plot(df["time"], df["RL_vel"])
+# axs[0, 0].set_title("Right leg velocity")
+# axs[1, 0].plot(df["time"], df["RL_accel"], 'tab:orange')
+# axs[1, 0].set_title("Right leg acceleration")
+# axs[1, 0].sharex(axs[0, 0])
+# axs[0, 1].plot(df["time"], df["RL_jerk"], 'tab:green')
+# axs[0, 1].set_title("Right leg jerk")
+# axs[1, 1].plot(df["time"], df["RL_prob"], 'tab:red')
+# axs[1, 1].set_title("Right leg position probability")
+# fig.tight_layout()
 
-fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(df["time"], df["LL_vel"])
-axs[0, 0].set_title("Left leg velocity")
-axs[1, 0].plot(df["time"], df["LL_accel"], 'tab:orange')
-axs[1, 0].set_title("Left leg acceleration")
-axs[1, 0].sharex(axs[0, 0])
-axs[0, 1].plot(df["time"], df["LL_jerk"], 'tab:green')
-axs[0, 1].set_title("Left leg jerk")
-axs[1, 1].plot(df["time"], df["LL_prob"], 'tab:red')
-axs[1, 1].set_title("Left leg position probability")
-fig.tight_layout()
+# fig, axs = plt.subplots(2, 2)
+# axs[0, 0].plot(df["time"], df["LL_vel"])
+# axs[0, 0].set_title("Left leg velocity")
+# axs[1, 0].plot(df["time"], df["LL_accel"], 'tab:orange')
+# axs[1, 0].set_title("Left leg acceleration")
+# axs[1, 0].sharex(axs[0, 0])
+# axs[0, 1].plot(df["time"], df["LL_jerk"], 'tab:green')
+# axs[0, 1].set_title("Left leg jerk")
+# axs[1, 1].plot(df["time"], df["LL_prob"], 'tab:red')
+# axs[1, 1].set_title("Left leg position probability")
+# fig.tight_layout()
 
-fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(df["time"], df["B_vel"])
-axs[0, 0].set_title("Body velocity")
-axs[1, 0].plot(df["time"], df["B_accel"], 'tab:orange')
-axs[1, 0].set_title("Body acceleration")
-axs[1, 0].sharex(axs[0, 0])
-axs[0, 1].plot(df["time"], df["B_jerk"], 'tab:green')
-axs[0, 1].set_title("Body jerk")
-axs[1, 1].plot(df["time"], df["B_prob"], 'tab:red')
-axs[1, 1].set_title("Body position probability")
-fig.tight_layout()
+# fig, axs = plt.subplots(2, 2)
+# axs[0, 0].plot(df["time"], df["B_vel"])
+# axs[0, 0].set_title("Body velocity")
+# axs[1, 0].plot(df["time"], df["B_accel"], 'tab:orange')
+# axs[1, 0].set_title("Body acceleration")
+# axs[1, 0].sharex(axs[0, 0])
+# axs[0, 1].plot(df["time"], df["B_jerk"], 'tab:green')
+# axs[0, 1].set_title("Body jerk")
+# axs[1, 1].plot(df["time"], df["B_prob"], 'tab:red')
+# axs[1, 1].set_title("Body position probability")
+# fig.tight_layout()
 
-fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(df["time"], df["TB_vel"])
-axs[0, 0].set_title("Tail base velocity")
-axs[1, 0].plot(df["time"], df["TB_accel"], 'tab:orange')
-axs[1, 0].set_title("Tail base acceleration")
-axs[1, 0].sharex(axs[0, 0])
-axs[0, 1].plot(df["time"], df["TB_jerk"], 'tab:green')
-axs[0, 1].set_title("Tail base jerk")
-axs[1, 1].plot(df["time"], df["TB_prob"], 'tab:red')
-axs[1, 1].set_title("Tail base position probability")
-fig.tight_layout()
+# fig, axs = plt.subplots(2, 2)
+# axs[0, 0].plot(df["time"], df["TB_vel"])
+# axs[0, 0].set_title("Tail base velocity")
+# axs[1, 0].plot(df["time"], df["TB_accel"], 'tab:orange')
+# axs[1, 0].set_title("Tail base acceleration")
+# axs[1, 0].sharex(axs[0, 0])
+# axs[0, 1].plot(df["time"], df["TB_jerk"], 'tab:green')
+# axs[0, 1].set_title("Tail base jerk")
+# axs[1, 1].plot(df["time"], df["TB_prob"], 'tab:red')
+# axs[1, 1].set_title("Tail base position probability")
+# fig.tight_layout()
 
-fig, axs = plt.subplots(2, 2)
-axs[0, 0].plot(df["time"], df["TE_vel"])
-axs[0, 0].set_title("Tail end velocity")
-axs[1, 0].plot(df["time"], df["TE_accel"], 'tab:orange')
-axs[1, 0].set_title("Tail end acceleration")
-axs[1, 0].sharex(axs[0, 0])
-axs[0, 1].plot(df["time"], df["TE_jerk"], 'tab:green')
-axs[0, 1].set_title("Tail end jerk")
-axs[1, 1].plot(df["time"], df["TE_prob"], 'tab:red')
-axs[1, 1].set_title("Tail end position probability")
-fig.tight_layout()
+# fig, axs = plt.subplots(2, 2)
+# axs[0, 0].plot(df["time"], df["TE_vel"])
+# axs[0, 0].set_title("Tail end velocity")
+# axs[1, 0].plot(df["time"], df["TE_accel"], 'tab:orange')
+# axs[1, 0].set_title("Tail end acceleration")
+# axs[1, 0].sharex(axs[0, 0])
+# axs[0, 1].plot(df["time"], df["TE_jerk"], 'tab:green')
+# axs[0, 1].set_title("Tail end jerk")
+# axs[1, 1].plot(df["time"], df["TE_prob"], 'tab:red')
+# axs[1, 1].set_title("Tail end position probability")
+# fig.tight_layout()
 
 average_uncertainty = (df["H_prob"] + df["RA_prob"] + df["RL_prob"] +  df["RL_prob"] + df["LL_prob"] + df["B_prob"]  + df["TB_prob"] + df["TE_prob"])/8
 average_jerk = (df["H_jerk"] + df["RA_jerk"] + df["RL_jerk"] +  df["RL_jerk"] + df["LL_jerk"] + df["B_jerk"]  + df["TB_jerk"] + df["TE_jerk"])/8
 df.insert(49, "Average Jerk", average_jerk, True)
 df.insert(50, "Average Uncertainty", average_uncertainty, True)
 
-fig, axs = plt.subplots(2)
-axs[0].plot(df["time"], df["Average Jerk"], 'tab:orange')
-axs[0].set_title("Average jerk")
-axs[1].plot(df["time"], df["Average Uncertainty"], 'tab:green')
-axs[1].set_title("Average position uncertainty")
+# fig, axs = plt.subplots(2)
+# axs[0].plot(df["time"], df["Average Jerk"], 'tab:orange')
+# axs[0].set_title("Average jerk")
+# axs[1].plot(df["time"], df["Average Uncertainty"], 'tab:green')
+# axs[1].set_title("Average position uncertainty")
+
+
+# Create a VideoCapture object
+
+path_to_vid = "/home/minassian/Documents/EPM1-10-20-23-Vincent Zimmern-2023-10-20/videos/EPM1-09-2023-below-combinedDLC_resnet50_EPM1-10-20-23Oct20shuffle1_500000_labeled.mp4"
+cap = cv2.VideoCapture(path_to_vid)
+if (cap.isOpened()== False): 
+  print("Error opening video stream or file")
+
+fps = cap.get(cv2.CAP_PROP_FPS)
+print("Frame rate: ", int(fps), "FPS")
+
+# create a movie of jerk data over time 
+
+# create empty lists for the x and y data
+x = []
+y = []
+
+# create the figure and axes objects
+fig, ax = plt.subplots()
+def animate(i):
+    pt = df["Average Jerk"].iloc[i]
+    x.append(i)
+    y.append(pt)
+
+    #ax.clear()
+    ax.plot(x, y)
+    ax.set_xlim([0,len(df["time"])])
+    ax.set_ylim([0,df["Average Jerk"].max()])
+
+ani = FuncAnimation(fig, animate, frames=len(df["time"]), interval=30, repeat=False)
+fig.suptitle('Averaged jerk of the mouse', fontsize=14) 
+
+# converting to an html5 video 
+video = ani.to_html5_video() 
+  
+# embedding for the video 
+html = display.HTML(video) 
+  
+# draw the animation 
+display.display(html) 
+
+# save the animation
+writervideo = ani.FFMpegWriter(fps=60) 
+ani.save('average-jerk.mp4', writer=writervideo) 
+
+plt.close() 
+
+# create empty lists for the x and y data for uncertainty
+x2 = []
+y2 = []
+
+# create the figure and axes objects for uncertainty movie
+fig, ax = plt.subplots()
+def animate(i):
+    pt = df["Average Uncertainty"].iloc[i]
+    x2.append(i)
+    y2.append(pt)
+
+    #ax.clear()
+    ax.plot(x2, y2)
+    ax.set_xlim([0,len(df["time"])])
+    ax.set_ylim([0,df["Average Uncertainty"].max()])
+
+ani2 = FuncAnimation(fig, animate, frames=len(df["time"]), interval=30, repeat=False)
+fig.suptitle('Averaged uncertainty of jerk in mouse', fontsize=14) 
+
+# converting to an html5 video 
+video2 = ani2.to_html5_video() 
+  
+# embedding for the video 
+html = display.HTML(video2) 
+
+# draw the animation 
+display.display(html) 
+
+# save the animation
+writervideo = ani2.FFMpegWriter(fps=60) 
+ani2.save('uncertainty-jerk.mp4', writer=writervideo) 
+
+plt.close() 
+
+
