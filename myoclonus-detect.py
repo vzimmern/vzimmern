@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 from matplotlib import pyplot as plt 
 import matplotlib.animation as animation 
+from matplotlib.animation import FuncAnimation
 from IPython import display 
 
 # Read the CSV file
@@ -13,8 +14,8 @@ df = pd.read_csv(path_to_csv)
 dt = 0.033
 
 # define empty lists for the body parts
-# H = head, RA = right arm, RL = right leg, LA = left arm, LL = left leg, B = body, TB = tail base, TE = tail end
-# Subscript "prob", as in "H_prob", refers to the uncertainty with regards to the position of that body part (in this case, the head). Uncertainty is between 0 and 1 (i.e. 100% certainty)
+# H = head, RA = right arm, RL = right leg, B = body, TB = tail base, TE = tail end
+time = []
 H_vel = []
 RA_vel = []
 LA_vel = []
@@ -33,6 +34,9 @@ df = df.reset_index(drop=True)
 df = df.astype(float)
 
 # calculate velocities from pixel positions
+for idx in df.index:
+    time.append(idx * dt)
+    
 for idx in df.index-1:
     H_vel.append(np.sqrt(np.diff(df["H_x"])[idx]**2 + np.diff(df["H_y"])[idx]**2)/dt)
     RA_vel.append(np.sqrt(np.diff(df["RA_x"])[idx]**2 + np.diff(df["RA_y"])[idx]**2)/dt)
@@ -44,6 +48,9 @@ for idx in df.index-1:
     TE_vel.append(np.sqrt(np.diff(df["TE_x"])[idx]**2 + np.diff(df["TE_y"])[idx]**2)/dt)
 
 # assign velocities as new columns in the dataframe
+
+df["time"] = time
+
 df.insert(4, "H_vel", H_vel, True)
 df.insert(8, "RA_vel", RA_vel, True)
 df.insert(12, "RL_vel", RL_vel, True)
@@ -179,6 +186,9 @@ df["TE_jerk"][2] = 0
 # create average jerk and uncertainty and assign to dedicated columns in dataframe
 average_uncertainty = (df["H_prob"] + df["RA_prob"] + df["RL_prob"] +  df["RL_prob"] + df["LL_prob"] + df["B_prob"]  + df["TB_prob"] + df["TE_prob"])/8
 average_jerk = (df["H_jerk"] + df["RA_jerk"] + df["RL_jerk"] +  df["RL_jerk"] + df["LL_jerk"] + df["B_jerk"]  + df["TB_jerk"] + df["TE_jerk"])/8
+average_uncertainty = average_uncertainty.tolist()
+average_jerk = average_jerk.tolist()
+
 df.insert(49, "Average Jerk", average_jerk, True)
 df.insert(50, "Average Uncertainty", average_uncertainty, True)
 
@@ -197,23 +207,23 @@ print("Frame rate: ", int(fps), "FPS")
 # Plotting jerk and uncertainty
 
 # create empty lists for the x and y data
-x = []
-y = []
+# x = []
+# y = []
 
 # create the figure and axes objects
-fig, ax = plt.subplots()
-def animate(i):
-    pt = df["Average Jerk"].iloc[i]
-    x.append(i)
-    y.append(pt)
+# fig, ax = plt.subplots()
+# def animate(i):
+#     pt = df["Average Jerk"].iloc[i]
+#     x.append(i)
+#     y.append(pt)
 
-    #ax.clear()
-    ax.plot(x, y)
-    ax.set_xlim([0,len(df["time"])])
-    ax.set_ylim([0,df["Average Jerk"].max()])
+#     #ax.clear()
+#     ax.plot(x, y)
+#     ax.set_xlim([0,len(df["time"])])
+#     ax.set_ylim([0,df["Average Jerk"].max()])
 
-ani = animation.FuncAnimation(fig, animate, frames=len(df["time"]), interval=30, repeat=False)
-fig.suptitle('Average Jerk plot', fontsize=14) 
+# ani = animation.FuncAnimation(fig, animate, frames=len(df["time"]), interval=30, repeat=False)
+# fig.suptitle('Average Jerk plot', fontsize=14) 
 
 # converting to an html5 video 
 # video = ani.to_html5_video() 
@@ -223,8 +233,43 @@ fig.suptitle('Average Jerk plot', fontsize=14)
 #display.display(html) 
   
 # saving to m4 using ffmpeg writer 
-writervideo = animation.FFMpegWriter(fps=30) 
-ani.save('avg-jerk-EPM1-below-comb-10-20-23.mp4', writer=writervideo) 
-plt.close() 
+# writervideo = animation.FFMpegWriter(fps=30) 
+# ani.save('avg-jerk-EPM1-below-comb-10-20-23.mp4', writer=writervideo) 
+# plt.close() 
 
-#plt.show()
+
+fig, ax = plt.subplots()
+xdata, ydata = [], []
+ln, = ax.plot([], [], 'ro')
+#ax.grid()
+fig.suptitle("Average jerk")
+#ax.set(xlabel="Video time", ylabel="Jerk in pixels/second cubed")
+#ax.grid()
+ 
+def init():
+    ax.set_xlim(0, len(df))
+    ax.set_ylim(0, df["Average Jerk"].max())
+    return ln, 
+
+def update(frame):
+    ax.clear()
+    ax.grid()
+    ax.set(xlabel="Video time", ylabel="Jerk in pixels/second cubed")
+    xdata.append(frame)
+    ydata.append(df.iat[frame, 50])
+    ln.set_data(xdata, ydata)
+    ax.set_title(f"N={frame}")
+    return ln,
+
+ani = FuncAnimation(fig, update, frames=len(df), init_func= init, interval=30, blit=True)
+ani.save('jerk_below_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+
+# for idx in df.index:
+#     ax.clear()
+#     ax.set(xlabel="Video time", ylabel="Jerk in pixels/second cubed")
+#     ax.set_title(f"N={idx}")
+#     ax.grid()
+#     ax.plot(df["time"].iloc[idx], df["Average Jerk"].iloc[idx])
+
+#     fig.canvas.draw
+#     plt.pause(0.00001)
