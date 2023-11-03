@@ -5,16 +5,19 @@ from matplotlib import pyplot as plt
 import matplotlib.animation as animation 
 from matplotlib.animation import FuncAnimation
 from IPython import display 
+import time
+import moviepy.editor as mp
+from moviepy.editor import *
 
-# Read the CSV file
+# Read the CSV file: set the path to where the CSV file is located
 path_to_csv = "/home/minassian/Documents/EPM1-10-20-23-Vincent Zimmern-2023-10-20/videos/EPM1-09-2023-below-combinedDLC_resnet50_EPM1-10-20-23Oct20shuffle1_500000.csv"
 df = pd.read_csv(path_to_csv)
 
-# define time parameter from the frame rate 30 FPS
+# define time parameter from the frame rate (30 FPS for most uses, might be 60 FPS)
 dt = 0.033
 
 # define empty lists for the body parts
-# H = head, RA = right arm, RL = right leg, B = body, TB = tail base, TE = tail end
+# i.e. H = head, RA = right arm, RL = right leg, B = body, TB = tail base, TE = tail end
 time = []
 H_vel = []
 RA_vel = []
@@ -33,10 +36,11 @@ df = df.drop([0,1], axis=0)
 df = df.reset_index(drop=True)
 df = df.astype(float)
 
-# calculate velocities from pixel positions
+# convert frame number to approximate time in seconds
 for idx in df.index:
     time.append(idx * dt)
     
+# calculate velocities from pixel positions (has to be up to index-1 because diff requires two values)   
 for idx in df.index-1:
     H_vel.append(np.sqrt(np.diff(df["H_x"])[idx]**2 + np.diff(df["H_y"])[idx]**2)/dt)
     RA_vel.append(np.sqrt(np.diff(df["RA_x"])[idx]**2 + np.diff(df["RA_y"])[idx]**2)/dt)
@@ -47,10 +51,8 @@ for idx in df.index-1:
     TB_vel.append(np.sqrt(np.diff(df["TB_x"])[idx]**2 + np.diff(df["TB_y"])[idx]**2)/dt)
     TE_vel.append(np.sqrt(np.diff(df["TE_x"])[idx]**2 + np.diff(df["TE_y"])[idx]**2)/dt)
 
-# assign velocities as new columns in the dataframe
-
+# assign time and velocities as new columns in the dataframe
 df["time"] = time
-
 df.insert(4, "H_vel", H_vel, True)
 df.insert(8, "RA_vel", RA_vel, True)
 df.insert(12, "RL_vel", RL_vel, True)
@@ -80,7 +82,7 @@ B_accel = []
 TB_accel = []
 TE_accel = []
 
-# Using DataFrame.index to calculate accelerations
+# Using DataFrame.index to calculate accelerations (same as velocity)
 for idx in df.index-1:
     H_accel.append(np.diff(df["H_vel"])[idx]/dt)
     RA_accel.append(np.diff(df["RA_vel"])[idx]/dt)
@@ -183,12 +185,15 @@ df["TE_jerk"][0] = 0
 df["TE_jerk"][1] = 0
 df["TE_jerk"][2] = 0
 
-# create average jerk and uncertainty and assign to dedicated columns in dataframe
+# create average jerk and average uncertainty 
 average_uncertainty = (df["H_prob"] + df["RA_prob"] + df["RL_prob"] +  df["RL_prob"] + df["LL_prob"] + df["B_prob"]  + df["TB_prob"] + df["TE_prob"])/8
 average_jerk = (df["H_jerk"] + df["RA_jerk"] + df["RL_jerk"] +  df["RL_jerk"] + df["LL_jerk"] + df["B_jerk"]  + df["TB_jerk"] + df["TE_jerk"])/8
+
+# averaging dataframe columns leads to Series objects. This step converts Series to lists
 average_uncertainty = average_uncertainty.tolist()
 average_jerk = average_jerk.tolist()
 
+# assign average jerk and uncerainty to dedicated columns in dataframe
 df.insert(49, "Average Jerk", average_jerk, True)
 df.insert(50, "Average Uncertainty", average_uncertainty, True)
 
@@ -204,7 +209,7 @@ if (cap.isOpened()== False):
 fps = cap.get(cv2.CAP_PROP_FPS)
 print("Frame rate: ", int(fps), "FPS")
 
-# Plotting jerk and uncertainty
+# Plotting jerk and uncertainty --------------------------------------------
 
 # create empty lists for the x and y data
 # x = []
@@ -237,39 +242,164 @@ print("Frame rate: ", int(fps), "FPS")
 # ani.save('avg-jerk-EPM1-below-comb-10-20-23.mp4', writer=writervideo) 
 # plt.close() 
 
+# --------------------- Alternative plotting approach -------------------------
 
 fig, ax = plt.subplots()
 xdata, ydata = [], []
-ln, = ax.plot([], [], 'ro')
-#ax.grid()
+ln, = ax.plot([], [], 'r-')
 fig.suptitle("Average jerk")
-#ax.set(xlabel="Video time", ylabel="Jerk in pixels/second cubed")
-#ax.grid()
- 
+
+tic = time.perf_counter()
+
+
 def init():
-    ax.set_xlim(0, len(df))
+    ax.grid()
+    ax.set_xlim(0, df["time"].max())
     ax.set_ylim(0, df["Average Jerk"].max())
     return ln, 
 
 def update(frame):
-    ax.clear()
-    ax.grid()
-    ax.set(xlabel="Video time", ylabel="Jerk in pixels/second cubed")
-    xdata.append(frame)
-    ydata.append(df.iat[frame, 50])
+    ax.set(xlabel="Video time (sec)", ylabel="Jerk (pixels/second cubed)")
+    xdata.append(df.iat[frame, 0])
+    ydata.append(df.iat[frame, 49])
     ln.set_data(xdata, ydata)
     ax.set_title(f"N={frame}")
+    ax.autoscale_view(True, True)
+    ax.relim()
     return ln,
 
 ani = FuncAnimation(fig, update, frames=len(df), init_func= init, interval=30, blit=True)
-ani.save('jerk_below_animation.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+ani.save('jerk_below_animation_full.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+toc = time.perf_counter()
 
-# for idx in df.index:
-#     ax.clear()
-#     ax.set(xlabel="Video time", ylabel="Jerk in pixels/second cubed")
-#     ax.set_title(f"N={idx}")
-#     ax.grid()
-#     ax.plot(df["time"].iloc[idx], df["Average Jerk"].iloc[idx])
+print(f"Video was generated in {(toc - tic)/60:0.4f} minutes")
+ 
+fig, ax = plt.subplots()
+xdata, ydata = [], []
+ln, = ax.plot([], [], 'g-')
+fig.suptitle("Average uncerainty")
 
-#     fig.canvas.draw
-#     plt.pause(0.00001)
+tic = time.perf_counter()
+
+def init():
+    ax.grid()
+    ax.set_xlim(0, df["time"].max())
+    ax.set_ylim(0, df["Average Uncertainty"].max())
+    return ln, 
+
+def update(frame):
+    ax.set(xlabel="Video time (sec)", ylabel="Uncertainty (1=100%)")
+    xdata.append(df.iat[frame, 0])
+    ydata.append(df.iat[frame, 50])
+    ln.set_data(xdata, ydata)
+    ax.set_title(f"N={frame}")
+    ax.autoscale_view(True, True)
+    ax.relim()
+    return ln,
+
+ani = FuncAnimation(fig, update, frames=len(df), init_func= init, interval=30, blit=True)
+ani.save('uncertainty_below_animation_full.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+toc = time.perf_counter()
+
+print(f"Video was generated in {(toc - tic)/60:0.4f} minutes")
+
+
+fig, ax = plt.subplots()
+xdata, ydata = [], []
+ln, = ax.plot([], [], 'b-')
+fig.suptitle("Head jerk")
+
+tic = time.perf_counter()
+
+def init():
+    ax.grid()
+    ax.set_xlim(0, df["time"].max())
+    ax.set_ylim(0, df["H_jerk"].max())
+    return ln, 
+
+def update(frame):
+    ax.set(xlabel="Video time (sec)", ylabel="Head jerk (pixels/second cubed)")
+    xdata.append(df.iat[frame, 0])
+    ydata.append(df.iat[frame, 6])
+    ln.set_data(xdata, ydata)
+    ax.set_title(f"N={frame}")
+    ax.autoscale_view(True, True)
+    ax.relim()
+    return ln,
+
+ani = FuncAnimation(fig, update, frames=len(df), init_func= init, interval=30, blit=True)
+ani.save('head_jerk_below_animation_full.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+toc = time.perf_counter()
+
+print(f"Video was generated in {(toc - tic)/60:0.4f} minutes")
+
+
+# ----------------- 2nd alternative approach to speed up plotting -----------
+
+# plt.rcParams["figure.figsize"] = (12,4)
+# axRxlims = [0, len(df)]
+# axRylims = [0, df["Average Jerk"].max()]
+# ln, = ax.plot([], [], 'ro')
+# fig, ax = plt.subplots()
+# fig.suptitle("Average Jerk")
+
+# for frame in df.index:
+#     ln.set_data(df.iat[frame, 0], df.iat[frame, 49])
+#   #  lineR.set_data(df.iat[frame,50])
+#     ax.set_title(f"N={frame}")    
+#     ax.autoscale_view(True, True)
+#     ax.relim()
+#     fig.canvas.draw()
+#     plt.show()
+#     plt.pause(0.00001)    
+    
+# -------------------- 3rd alternative approach to speed up plotting ------
+
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# ax.set_xlim((0,df["time"].max()))
+# ax.set_ylim((0,df["Average Jerk"].max()))
+# jerk, = plt.plot([],[], color='r')
+# uncertainty, = plt.plot([],[], color='g', alpha=0.5)
+
+# def update(i):
+#     jerk.set_data(df.iat[i,0], df.iat[i,50])
+#     uncertainty.set_data(df.iat[i,0], df.iat[i,49])
+#     return jerk, uncertainty
+
+# ani = FuncAnimation(fig, update, frames=range(1000), interval=30)
+# ani.save("jerk-uncertainty-1000.mp4")
+
+# ------------ Generating combined video of jerk, uncertainty, and footage ---
+
+# make sure that your underlying Python shell has moviepy module installed
+# you may need to go into terminal and type "pip install moviepy"
+ 
+path_to_jerk =  "/home/minassian/Documents/Jerk and Uncertainty Calculations/jerk_below_animation_full.mp4"
+path_to_uncert = "/home/minassian/Documents/Jerk and Uncertainty Calculations/uncertainty_below_animation_full.mp4"
+path_to_h_jerk = "/home/minassian/Documents/Jerk and Uncertainty Calculations/head_jerk_below_animation_full.mp4"
+
+# loading mouse footage
+mouse_footage = mp.VideoFileClip(path_to_vid).margin(10) 
+ 
+# loading jerk animation
+jerk_animation = mp.VideoFileClip(path_to_jerk).margin(10) 
+ 
+# loading uncertainty/likelihood animation
+uncert_animation = mp.VideoFileClip(path_to_uncert).margin(10) 
+ 
+# loading head jerk animation
+head_jerk_animation = mp.VideoFileClip(path_to_h_jerk)
+
+# clip list
+clips = [mouse_footage, jerk_animation, uncert_animation, head_jerk_animation]
+ 
+# from moviepy.editor import VideoFileClip, clips_array, vfx
+#clip4 = clip1.resize(0.60) # downsize 60%
+final_clip = clips_array([[mouse_footage, jerk_animation],
+                          [uncert_animation, head_jerk_animation]])
+
+final_clip.resize(width=480).write_videofile("stacked_jerk_uncert_footage.mp4")
+
+
+
