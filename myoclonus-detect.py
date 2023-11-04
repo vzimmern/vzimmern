@@ -4,13 +4,22 @@ import cv2
 from matplotlib import pyplot as plt 
 import matplotlib.animation as animation 
 from matplotlib.animation import FuncAnimation
-from IPython import display 
-import time
+from IPython import display
+
 import moviepy.editor as mp
-from moviepy.editor import *
+from moviepy.editor import * 
 
 # Read the CSV file: set the path to where the CSV file is located
 path_to_csv = "/home/minassian/Documents/EPM1-10-20-23-Vincent Zimmern-2023-10-20/videos/EPM1-09-2023-below-combinedDLC_resnet50_EPM1-10-20-23Oct20shuffle1_500000.csv"
+
+# Path to find the labelled video corresponding to the CSV file
+path_to_vid = "/home/minassian/Documents/EPM1-10-20-23-Vincent Zimmern-2023-10-20/videos/EPM1-09-2023-below-combinedDLC_resnet50_EPM1-10-20-23Oct20shuffle1_500000_labeled.mp4"
+
+# paths where you would like to store the average jerk, uncertainty, and head jerk of your recording -- please adjust the MP4 name to reflect the specific experiment/recording (e.g. WT-S100-11-3-2023 or EPM1-S121-11-2-2023)
+path_to_jerk =  "/home/minassian/Documents/Jerk and Uncertainty Calculations/jerk_animation.mp4"
+path_to_uncert = "/home/minassian/Documents/Jerk and Uncertainty Calculations/uncertainty_animation.mp4"
+path_to_h_jerk = "/home/minassian/Documents/Jerk and Uncertainty Calculations/head_jerk_animation.mp4"
+
 df = pd.read_csv(path_to_csv)
 
 # define time parameter from the frame rate (30 FPS for most uses, might be 60 FPS)
@@ -198,7 +207,6 @@ df.insert(49, "Average Jerk", average_jerk, True)
 df.insert(50, "Average Uncertainty", average_uncertainty, True)
 
 # Create a VideoCapture object from myoclonus videos
-path_to_vid = "/home/minassian/Documents/EPM1-10-20-23-Vincent Zimmern-2023-10-20/videos/EPM1-09-2023-below-combinedDLC_resnet50_EPM1-10-20-23Oct20shuffle1_500000_labeled.mp4"
 cap = cv2.VideoCapture(path_to_vid)
 
 # check that video is opened correctly
@@ -209,45 +217,16 @@ if (cap.isOpened()== False):
 fps = cap.get(cv2.CAP_PROP_FPS)
 print("Frame rate: ", int(fps), "FPS")
 
-# Plotting jerk and uncertainty --------------------------------------------
+# -------------------------- Generate animations for average jerk, head jerk, and uncertainty -----
 
-# create empty lists for the x and y data
-# x = []
-# y = []
-
-# create the figure and axes objects
-# fig, ax = plt.subplots()
-# def animate(i):
-#     pt = df["Average Jerk"].iloc[i]
-#     x.append(i)
-#     y.append(pt)
-
-#     #ax.clear()
-#     ax.plot(x, y)
-#     ax.set_xlim([0,len(df["time"])])
-#     ax.set_ylim([0,df["Average Jerk"].max()])
-
-# ani = animation.FuncAnimation(fig, animate, frames=len(df["time"]), interval=30, repeat=False)
-# fig.suptitle('Average Jerk plot', fontsize=14) 
-
-# converting to an html5 video 
-# video = ani.to_html5_video() 
-# embedding for the video 
-# html = display.HTML(video) 
-# draw the animation 
-#display.display(html) 
-  
-# saving to m4 using ffmpeg writer 
-# writervideo = animation.FFMpegWriter(fps=30) 
-# ani.save('avg-jerk-EPM1-below-comb-10-20-23.mp4', writer=writervideo) 
-# plt.close() 
-
-# --------------------- Alternative plotting approach -------------------------
+# --------------------- Generate animation of average jerk over time ------------------------
 
 fig, ax = plt.subplots()
 xdata, ydata = [], []
 ln, = ax.plot([], [], 'r-')
 fig.suptitle("Average jerk")
+
+import time
 
 tic = time.perf_counter()
 
@@ -269,15 +248,20 @@ def update(frame):
     return ln,
 
 ani = FuncAnimation(fig, update, frames=len(df), init_func= init, interval=30, blit=True)
-ani.save('jerk_below_animation_full.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+
+
+# please fill out the path below to which you would want to save the jerk animation
+ani.save(path_to_jerk, fps=30, extra_args=['-vcodec', 'libx264'])
 toc = time.perf_counter()
 
 print(f"Video was generated in {(toc - tic)/60:0.4f} minutes")
  
+# ------------------------ animation for averaged uncertainty of limb, head, body position ---------------
+
 fig, ax = plt.subplots()
 xdata, ydata = [], []
 ln, = ax.plot([], [], 'g-')
-fig.suptitle("Average uncerainty")
+fig.suptitle("Average uncertainty")
 
 tic = time.perf_counter()
 
@@ -298,11 +282,15 @@ def update(frame):
     return ln,
 
 ani = FuncAnimation(fig, update, frames=len(df), init_func= init, interval=30, blit=True)
-ani.save('uncertainty_below_animation_full.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+
+# please fill out the path below to which you would want to save the uncertainty animation
+ani.save(path_to_uncert, fps=30, extra_args=['-vcodec', 'libx264'])
 toc = time.perf_counter()
 
 print(f"Video was generated in {(toc - tic)/60:0.4f} minutes")
 
+ 
+# ------------------------ animation for head jerk over time ---------------
 
 fig, ax = plt.subplots()
 xdata, ydata = [], []
@@ -328,60 +316,19 @@ def update(frame):
     return ln,
 
 ani = FuncAnimation(fig, update, frames=len(df), init_func= init, interval=30, blit=True)
-ani.save('head_jerk_below_animation_full.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+ani.save(path_to_h_jerk, fps=30, extra_args=['-vcodec', 'libx264'])
 toc = time.perf_counter()
 
 print(f"Video was generated in {(toc - tic)/60:0.4f} minutes")
 
-
-# ----------------- 2nd alternative approach to speed up plotting -----------
-
-# plt.rcParams["figure.figsize"] = (12,4)
-# axRxlims = [0, len(df)]
-# axRylims = [0, df["Average Jerk"].max()]
-# ln, = ax.plot([], [], 'ro')
-# fig, ax = plt.subplots()
-# fig.suptitle("Average Jerk")
-
-# for frame in df.index:
-#     ln.set_data(df.iat[frame, 0], df.iat[frame, 49])
-#   #  lineR.set_data(df.iat[frame,50])
-#     ax.set_title(f"N={frame}")    
-#     ax.autoscale_view(True, True)
-#     ax.relim()
-#     fig.canvas.draw()
-#     plt.show()
-#     plt.pause(0.00001)    
-    
-# -------------------- 3rd alternative approach to speed up plotting ------
-
-# fig = plt.figure()
-# ax = fig.add_subplot(111)
-# ax.set_xlim((0,df["time"].max()))
-# ax.set_ylim((0,df["Average Jerk"].max()))
-# jerk, = plt.plot([],[], color='r')
-# uncertainty, = plt.plot([],[], color='g', alpha=0.5)
-
-# def update(i):
-#     jerk.set_data(df.iat[i,0], df.iat[i,50])
-#     uncertainty.set_data(df.iat[i,0], df.iat[i,49])
-#     return jerk, uncertainty
-
-# ani = FuncAnimation(fig, update, frames=range(1000), interval=30)
-# ani.save("jerk-uncertainty-1000.mp4")
-
-# ------------ Generating combined video of jerk, uncertainty, and footage ---
+# ------------ Generating combined video of average jerk, head jerk, uncertainty, and footage ---
 
 # make sure that your underlying Python shell has moviepy module installed
 # you may need to go into terminal and type "pip install moviepy"
- 
-path_to_jerk =  "/home/minassian/Documents/Jerk and Uncertainty Calculations/jerk_below_animation_full.mp4"
-path_to_uncert = "/home/minassian/Documents/Jerk and Uncertainty Calculations/uncertainty_below_animation_full.mp4"
-path_to_h_jerk = "/home/minassian/Documents/Jerk and Uncertainty Calculations/head_jerk_below_animation_full.mp4"
 
 # loading mouse footage
 mouse_footage = mp.VideoFileClip(path_to_vid).margin(10) 
- 
+
 # loading jerk animation
 jerk_animation = mp.VideoFileClip(path_to_jerk).margin(10) 
  
@@ -389,17 +336,21 @@ jerk_animation = mp.VideoFileClip(path_to_jerk).margin(10)
 uncert_animation = mp.VideoFileClip(path_to_uncert).margin(10) 
  
 # loading head jerk animation
-head_jerk_animation = mp.VideoFileClip(path_to_h_jerk)
+head_jerk_animation = mp.VideoFileClip(path_to_h_jerk).margin(10)
 
 # clip list
 clips = [mouse_footage, jerk_animation, uncert_animation, head_jerk_animation]
- 
+
+mouse_footage.set_position(("left","center"))
+jerk_animation.set_position(("right", "top"))
+uncert_animation.set_position(("right", "middle"))
+head_jerk_animation.set_position("right", "bottom")
+
 # from moviepy.editor import VideoFileClip, clips_array, vfx
-#clip4 = clip1.resize(0.60) # downsize 60%
 final_clip = clips_array([[mouse_footage, jerk_animation],
                           [uncert_animation, head_jerk_animation]])
 
-final_clip.resize(width=480).write_videofile("stacked_jerk_uncert_footage.mp4")
+final_clip.resize(width=480).write_videofile("stacked_jerk_uncert_footage_resized.mp4")
 
 
 
